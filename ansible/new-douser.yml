@@ -1,0 +1,26 @@
+---
+# Add a new Digital Ocean user
+# Copy a the local public key to the new user's authorized_keys file
+
+# on all hosts, run as the user root...
+
+- hosts: do-test2
+  remote_user: root
+  sudo: yes 
+
+   #  tasks:
+   #    - name: test shell command
+   #      shell: whoami
+   #      register: result
+   #
+   #    - debug: var = result
+   #      command: uname -a
+  tasks:
+  - name: Digital Ocean Add User
+    user: name=test groups="sudo"
+  - name: Copy managment's public key to user's authorized_key
+    authorized_key: user=test key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+
+          
+
