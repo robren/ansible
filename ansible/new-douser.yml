@@ -2,25 +2,46 @@
 # Add a new Digital Ocean user
 # Copy a the local public key to the new user's authorized_keys file
 
-# on all hosts, run as the user root...
+# Assumption: We've created the droplet and have passwordless ssh login as
+# root.
+# - As long as we've added our public ssh key Digital Ocean we can specify at
+#   droplet creation time to allow this public key. 
+# - When the above is true whenever we create a new droplet we can 
+#   ssh root@droplet-ip into it with no password.
+#
+#   Note: the password passed into the "user" module has to be an encrypted
+#   pasword. So to make the passwod be "test" for the remote user test we do:
+#   python -c 'import crypt; print crypt.crypt("test,
+#   "$1$SomeSalt$")'
 
 - hosts: do-test2
   remote_user: root
-  sudo: yes 
+  vars:
+    user: test
+#  sudo: yes 
 
-   #  tasks:
-   #    - name: test shell command
-   #      shell: whoami
-   #      register: result
-   #
-   #    - debug: var = result
-   #      command: uname -a
   tasks:
+  - name: Install git and zsh 
+    apt: name={{ item }} state=latest update_cache=yes
+    with_items:
+     - git
+     - zsh
+     - git-core
+
   - name: Digital Ocean Add User
-    user: name=test groups="sudo"
-  - name: Copy managment's public key to user's authorized_key
+    user: name=test groups="sudo" password={{ "$1$SomeSalt$aIJ0bvHJBSYd307VQuuD90" }} shell=/bin/bash
+  - name: Copy management's public key to users authorized_key
     authorized_key: user=test key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
 
+  - name: Copy my dotfiles to the new droplet
+    synchronize: src=~/git-dotfiles dest=/home/{{ user }}
 
-          
+  - name: Clone oh-my-zsh repo
+    git: repo=https://github.com/robbyrussell/oh-my-zsh.git dest=/home/{{ user}}/.oh-my-zsh
+
+  - name: Set zsh as default shell
+    user: name={{ user }} shell=/bin/zsh
+  - name: Run the setupdotfiles.sh script
+    shell: /home/{{ user }}/git-dotfiles/setupdotfiles.sh  chdir=/home/{{ user }}/git-dotfiles
+  
 
