@@ -1,0 +1,72 @@
+---
+# Create an environment for a new user
+# Tested on a Digital Ocean droplet but will work on any account with
+# passwordless ssh access to a root account
+#
+# Copy a the local public key to the new user's authorized_keys file
+
+# Assumption: We've created an account and have passwordless  root ssh login 
+# Specifically for Digital Ocean
+# - As long as we've added our public ssh key to Digital Ocean we can specify at
+#   droplet creation time to use this public key. 
+# - When the above is true whenever we create a new droplet we can 
+#   ssh root@droplet-ip into it with no password.
+#
+#   Note: the password passed into the "user" module has to be an encrypted
+#   password. So to make the password be "foo" for the remote user test we do:
+#   python -c 'import crypt; print crypt.crypt("test", "$1$SomeSalt$")'
+#
+# I have to be root to ssh in the first place since no user ssh accounti
+# exists initially
+# Ordinarily we'd be sudo-ing to get root permission. Here we become_user from
+# root to become the non-privileged user
+
+- hosts: do-test3
+  remote_user: root
+  vars:
+    user: test
+#  sudo: yes 
+
+  tasks:
+  - name: Install git and zsh 
+    apt: name={{ item }} state=latest update_cache=yes
+    with_items:
+     - git
+     - zsh
+     - git-core
+
+  - name: Digital Ocean Add User
+    user: name=test groups="sudo" password={{ "$1$SomeSalt$aIJ0bvHJBSYd307VQuuD90" }} shell=/bin/bash
+  - name: Copy management's public key to users authorized_key
+    authorized_key: user=test key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+  - name: Clone oh-my-zsh repo
+    git: repo=https://github.com/robbyrussell/oh-my-zsh.git dest=/home/{{ user}}/.oh-my-zsh
+    become: yes
+    become_user: "{{ user }}"
+
+  - name: Set zsh as default shell
+    user: name={{ user }} shell=/bin/zsh
+    
+  - name: Clone my dotfiles repo
+    git: repo=https://github.com/robren/dotfiles.git  dest=/home/{{ user}}/dotfiles
+    become: yes
+    become_user: "{{ user }}"
+
+  - name: Run the setupdotfiles.sh script
+    shell: /home/{{ user }}/dotfiles/setupdotfiles.sh  chdir=/home/{{ user }}/dotfiles
+    become: yes
+    become_user: "{{ user }}"
+
+  - name: Install latest docker
+    shell: wget -qO- https://get.docker.com/ | sh 
+  - name: Add user to docker groups
+    shell: usermod -aG docker {{ user }}
+
+  - name: Disallow password authentication
+    action: lineinfile dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+
+  - name: restart machine
+    command: shutdown -r now "Ansible updates triggered"
+  
+
