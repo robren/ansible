@@ -37,10 +37,12 @@ The script as it stands could work for any machine we can ssh into.
 
 The initial setup uses a single playbook new-user.yml
 
-Edit the variables in the new-user.yml e.g 
-- hosts
-- user
-- The password
+- Edit the variables in the new-user.yml e.g 
+    - hosts
+    - user
+    - The password
+- Make sure you've got an local ssh public key file
+  e.g ~/.ssh/id_rsa.pub
 
 
 # Future Tasks
