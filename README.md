@@ -24,12 +24,10 @@ Now we can install a recent version of ansible
 The file new-user.yml maybe used to setup a nice environment with 
 zsh vim and a decent set of vim modules.
 
-douser standing for Digital Ocean User.
-
-As the script stands (Feb 22 2016) the Digital Ocean  droplet has to be
-pre-created and has our local machines ssh public key added to the Digital
-Ocean account. (this only has to be done once, since new machines will all be
-preconfigured to accept our public key).
+The Digital Ocean  droplet has to be pre-created and have our local machines
+ssh public key added to the Digital Ocean account. (this only has to be done
+once, since new machines will can all be preconfigured, via a gui checkbox
+during droplet creation, to accept our public key).
 
 The script as it stands could work for any machine we can ssh into.
 
@@ -48,7 +46,7 @@ The initial setup uses a single playbook new-user.yml
 # Future Tasks
 
 In later submissions, I'll convert this playbook into using roles. The use of
-roles will facilitate additional playbooks reusing aspects of this common
+roles will facilitate creating additional playbooks reusing aspects of this common
 playbook without the need of cut 'n paste.
 
 Potentially I'll investigate the ability to spin-up a droplet
