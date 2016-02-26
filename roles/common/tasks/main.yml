@@ -1,0 +1,61 @@
+---
+# Create an environment for a new user
+# Tested on a Digital Ocean droplet but will work on any account with
+# passwordless ssh access to a root account
+#
+# Copy a the local public key to the new user's authorized_keys file
+
+# Assumption: We've created an account and have passwordless  root ssh login 
+# Specifically for Digital Ocean
+# - As long as we've added our public ssh key to Digital Ocean we can specify at
+#   droplet creation time to use this public key. 
+# - When the above is true whenever we create a new droplet we can 
+#   ssh root@droplet-ip into it with no password.
+#
+#   Note: the password passed into the "user" module has to be an encrypted
+#   password. So to make the password be "foo" for the remote user test we do:
+#   python -c 'import crypt; print crypt.crypt("test", "$1$SomeSalt$")'
+#
+# I have to be root to ssh in the first place since no user ssh accounti
+# exists initially
+# Ordinarily we'd be sudo-ing to get root permission. Here we become_user from
+# root to become the non-privileged user
+
+# tasks file for common
+#
+- debug: msg=" user_name {{ user_name }} and password {{ user_password}}"
+- name: Create and add user account 
+  user: name="{{ user_name }}" groups="sudo" password={{ user_password }} shell=/bin/bash
+- name: Copy managements public key to users authorized_key
+# The whole nesting of moustaches and having to use single quotes inside of
+# doubles and vice-versa is very flaky and time consuming to debug.
+  authorized_key: user="{{ user_name }}"  key="{{ lookup('file', '{{ public_key_file }}' ) }}"
+
+- name: Install git and zsh 
+  apt: name={{ item }} state=latest update_cache=yes
+  with_items:
+   - git
+   - zsh
+   - git-core
+
+- name: Clone oh-my-zsh repo
+  git: repo=https://github.com/robbyrussell/oh-my-zsh.git dest=/home/{{ user_name}}/.oh-my-zsh
+  become: yes
+  become_user: "{{ user_name }}"
+
+- name: Set zsh as default shell
+  user: name={{ user_name }} shell=/bin/zsh
+    
+- name: Clone my dotfiles repo
+  git: repo=https://github.com/robren/dotfiles.git  dest=/home/{{ user_name}}/dotfiles
+  become: yes
+  become_user: "{{ user_name }}"
+
+- name: Run the setupdotfiles.sh script
+  shell: /home/{{ user_name }}/dotfiles/setupdotfiles.sh  chdir=/home/{{ user_name }}/dotfiles
+  become: yes
+  become_user: "{{ user_name }}"
+
+- name: Disallow password authentication
+  action: lineinfile dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+

@@ -35,8 +35,8 @@
      - zsh
      - git-core
 
-  - name: Digital Ocean Add User
-    user: name=test groups="sudo" password={{ "$1$SomeSalt$aIJ0bvHJBSYd307VQuuD90" }} shell=/bin/bash
+  - name: Create and add user account
+    user: name={{ user }} groups="sudo" password={{ "$1$SomeSalt$aIJ0bvHJBSYd307VQuuD90" }} shell=/bin/bash
   - name: Copy management's public key to users authorized_key
     authorized_key: user=test key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
 
