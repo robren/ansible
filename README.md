@@ -1,10 +1,20 @@
+# Ansible playbooks and tools
 A repo for usefull Ansible playbooks and roles, 
+
+It covers:
+- Installing Ansible
+- Creating a default programming environment in an existing  ( manually
+  created from the Digital Ocean Web UI) droplet
+- Programmatically creating  and deleting droplets
+- Creating a nice environment within these dynamic droplets
+
+## Installation
 
 If ansible is installed from the the repos included in Ubuntu 14.04 ( even
 after apt-get update) you'll get ansible of version  1.5.4, this is  from April 2014 !! 
 
 Ansible has had numerous big fixes and improvements in the last 2 years, in
-face I had lots of issues with ssh permissions in the older versions.
+fact I had lots of issues with ssh permissions in the older versions.
 
 I recommend you install the ansible ppa. This way you can get, as of Feb 2016
 ansible version 2.0.0.2. Much nicer.
@@ -42,14 +52,80 @@ The initial setup uses a single playbook new-user.yml
 - Make sure you've got an local ssh public key file
   e.g ~/.ssh/id_rsa.pub
 
+# Role Based Droplet Configuration
+
+# Droplet Programmatic Creation and Destruction
+
+## Droplet Creation
+Here we pass in via the CLI,  the values of the droplets dictionary. This being a local
+varaible containing the names of all of the droplets we wish to create. This
+overrides any variables we have in the playbook
+
+This uses localhost to communicate with digital-ocean. It does require the use
+of a TOKEN, this is passed into playbook via an environment variable
+
+- From the DO web interface you can obtain your secret TOKEN. Stick this in a
+  shell script and export it. Or given that it needs to be in the dynamic
+  inventory script new_do_droplet.in then stick in in there and run 
+  > 
+
+  > env | grep TOK
+  DO_API_TOKEN=XXXXXYYYYYZZZZZZ6e40e31b39df26a9f4a83e89acb63ea18d54bf94252ce2c6
+
+
+> ansible-playbook  new-do-droplet.yml --extra-vars\
+'{"droplets":["dotest12","dotest13"]}'
+
+## Digital Ocean Dynamic inventory script digital_ocean.py
+
+From https://github.com/ansible/ansible/contrib/inventory
+
+This will query digital ocean's API ( v2.0) and obtain information about
+droplets we have associated with an account. This account being represented by
+a specific TOKEN.
+- digital_ocean.py has a companion file digital_ocean.ini where this must be
+  added to.
+
+> ./digital_ocean.py
+{"distro_Ubuntu": ["10.132.20.97", "198.211.98.32", "198.211.99.38",
+"198.211.101.88", "198.211.100.157"], "do-test2": ["10.132.20.97"],
+"size_512mb": ["10.132.20.97", "198.211.98.32", "198.211.99.38",
+"198.211.101.88", "198.211.100.157"], "11597639": ["198.211.101.88"],
+"11581992": ["198.211.98.32"], "11597673": ["198.211.100.157"], "dotest4":
+["198.211.99.38"], "status_active": ["10.132.20.97", "198.211.98.32",
+"198.211.99.38", "198.211.101.88", "198.211.100.157"], "11583141":
+["198.211.99.38"], "dotest3": ["198.211.98.32"], "image_ubuntu-14-04-x64":
+["198.211.98.32", "198.211.99.38", "198.211.101.88", "198.211.100.157"],
+"region_nyc3": ["10.132.20.97"], "region_nyc1": ["198.211.98.32",
+"198.211.99.38", "198.211.101.88", "198.211.100.157"], "image_15943679":
+["198.211.98.32", "198.211.99.38", "198.211.101.88", "198.211.100.157"],
+"image_14.04.3_x64": ["10.132.20.97"], "dotest13": ["198.211.100.157"],
+"dotest12": ["198.211.101.88"], "image_15828882": ["10.132.20.97"],
+"11366181": ["10.132.20.97"]}
+
+This script is used as a stand-in for the ansible host or inventory file and
+outputs a bunch of JSON which the ansible and ansible-playbook commands
+understand.
+
+We'll see the use of this next 
+
+## Droplet Deletion
+
+- Note, the variable I added "desired_state" so that we can use the same
+  new-do-droplet playbook for both creation and deletion of droplets
+> ansible-playbook -i digital_ocean.py  new-do-droplet.yml --extra-vars \
+'{"droplets":["dotest12","dotest13"], "desired_state":"deleted"}'
+
+## Adding a default environment to the new droplets
+Using the dynamic inventory script in conjunction witht our existing
+new-user-roles playbook 
+
+> ansible-playbook -i digital_ocean.py new-user-roles.yml --extra-vars 'hosts=dotest9'
 
 # Future Tasks
 
-In later submissions, I'll convert this playbook into using roles. The use of
-roles will facilitate creating additional playbooks reusing aspects of this common
-playbook without the need of cut 'n paste.
+ - Ansible and containers?
+   - But we have docker-engine to explore for that!
 
-Potentially I'll investigate the ability to spin-up a droplet
-programatically,although spinnig 'em up is relatively painless. 
 
 

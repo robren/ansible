@@ -21,13 +21,16 @@
 # Ordinarily we'd be sudo-ing to get root permission. Here we become_user from
 # root to become the non-privileged user
 
-- hosts: do-test3
+- hosts: "{{ hosts }}"
   remote_user: root
-  roles:
-   - role: common
+  gather_facts: False
+  vars:
      user_name: 'test'
      user_password: "$1$SomeSalt$aIJ0bvHJBSYd307VQuuD90" 
      public_key_file: "~/.ssh/id_rsa.pub"
+
+  roles:
+   - role: common
      tags: "common"
 
 #   - role: marcelocorreia.docker-install

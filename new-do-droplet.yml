@@ -1,0 +1,54 @@
+---
+# Create an environment for a new user
+- hosts: localhost
+  connection: local
+  remote_user: root
+  gather_facts: False
+  vars:
+    droplets:
+      - dotest3
+    desired_state: present
+    do_token: "{{ lookup('env','DO_API_TOKEN') }}"
+    my_ssh_pub_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+  tasks:
+
+  - name: Ensure ssh token is present on remote and get key-id
+    digital_ocean:
+      state: present
+      command: ssh
+      name: "test@test-lt"
+      ssh_pub_key: "{{ my_ssh_pub_key }}" 
+      api_token: "{{ do_token }}"
+
+    register: my_ssh_id
+  - debug: var="digital_ocean returned {{ my_ssh_id }}"
+
+  - name: create digital ocean user
+    digital_ocean:
+      state: "{{ desired_state }}"
+      unique_name: yes
+      ssh_key_ids: "{{ my_ssh_id.ssh_key.id }}"
+      command: droplet
+      name: "{{ item }}"
+      api_token: "{{ do_token }}"
+      size_id: 512mb
+      region_id: nyc1
+      image_id: ubuntu-14-04-x64
+      wait_timeout: 500
+    with_items: droplets
+    register: dropret
+
+  - debug: var=dropret.results
+
+#  - debug: var=item.results
+#    with_items: dropret
+#- debug: msg="ID is {{ item.results }}"
+#  - debug: var=vars
+#  - debug: msg="ID is {{ item.droplet.id }}"
+#  - debug: msg="IP is {{ item.droplet.ip_address }}"
+#     with_items: ret-val.droplet_details.results
+  #    with_items: droplet_details
+
+
+

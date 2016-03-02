@@ -4,3 +4,6 @@
 104.131.70.44
 [do-test3]
 104.131.171.184
+
+[digitalocean]
+localhost ansible_connection=local
