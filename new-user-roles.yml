@@ -32,9 +32,9 @@
   roles:
    - role: common
      tags: "common"
-
-#   - role: marcelocorreia.docker-install
-#     tags: "docker"
+ 
+   - role: robren.docker-ubuntu-14-04        
+     tags: "docker"
 
   post_tasks:
   - name: restart machine

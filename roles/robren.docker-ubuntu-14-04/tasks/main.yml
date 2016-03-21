@@ -1,0 +1,34 @@
+---
+# tasks file for robren.docker-ubuntu-14-04
+#
+
+- name: Install docker apt prerequisites
+  apt: name={{ item }} state=latest update_cache=yes
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+
+- name: Run the apt-key program
+  shell: apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D 
+  become: yes
+
+- name: Create the docker ppa
+  shell: echo 'deb https://apt.dockerproject.org/repo ubuntu-trusty main' >  /tmp/docker-ppa.list
+  become: yes
+
+- name: copy to the sources.list.d
+  shell: cp /tmp/docker-ppa.list /etc/apt/sources.list.d
+  become: yes
+
+- name: Install docker package
+  apt: name={{ item }} state=latest update_cache=yes
+  with_items:
+    - docker-engine
+
+- name: Start the docker service
+  service: name=docker state=started
+
+- name: Create Docker group and add user
+  shell: usermod -aG docker {{ user_name }}
+  become: yes
+

@@ -1,0 +1,5 @@
+---
+# vars file for robren.docker-ubuntu-14-04
+#
+vars:
+    sudo: yes

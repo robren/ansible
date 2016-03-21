@@ -3,20 +3,21 @@ A repo for usefull Ansible playbooks and roles,
 
 It covers:
 - Installing Ansible
-- Creating a default programming environment in an existing  ( manually
+- Creating a default programming environment in an existing  (manually
   created from the Digital Ocean Web UI) droplet
 - Programmatically creating  and deleting droplets
 - Creating a nice environment within these dynamic droplets
 
-## Installation
+## Installation of Ansible
 
-If ansible is installed from the the repos included in Ubuntu 14.04 ( even
-after apt-get update) you'll get ansible of version  1.5.4, this is  from April 2014 !! 
+If ansible is installed from the the repos included in Ubuntu 14.04 (even
+after apt-get update) you'll get ansible version 1.5.4, this is from April
+2014!! That's ancient.
 
 Ansible has had numerous big fixes and improvements in the last 2 years, in
 fact I had lots of issues with ssh permissions in the older versions.
 
-I recommend you install the ansible ppa. This way you can get, as of Feb 2016
+I recommend you install the ansible ppa. This way you can get, as of Feb 2016,
 ansible version 2.0.0.2. Much nicer.
 
     sudo apt-get update
@@ -41,7 +42,7 @@ during droplet creation, to accept our public key).
 
 The script as it stands could work for any machine we can ssh into.
 
-## Configuration
+## Creation of a new user within a preexisting droplet
 
 The initial setup uses a single playbook new-user.yml
 
@@ -52,19 +53,27 @@ The initial setup uses a single playbook new-user.yml
 - Make sure you've got an local ssh public key file
   e.g ~/.ssh/id_rsa.pub
 
+Then run "ansible-playbook new-user.yml" 
+
 # Role Based Droplet Configuration
+For the ansible roles based playbook to create a new-user in an existing
+droplet run the new-user-roles playbook.
+    > ansible-playbook new-user-roles.yml 
+
 
 # Droplet Programmatic Creation and Destruction
+To create a droplet programatically I've created an additional playbook
+new-do-droplet.yml
 
 ## Droplet Creation
-Here we pass in via the CLI,  the values of the droplets dictionary. This being a local
-varaible containing the names of all of the droplets we wish to create. This
+Here we pass in via the CLI, the values of the droplets dictionary. This being a local
+variable containing the names of all of the droplets we wish to create. This
 overrides any variables we have in the playbook
 
 This uses localhost to communicate with digital-ocean. It does require the use
 of a TOKEN, this is passed into playbook via an environment variable
 
-- From the DO web interface you can obtain your secret TOKEN. Stick this in a
+- From the Digital Ocean web interface you can obtain your secret TOKEN. Stick this in a
   shell script and export it. Or given that it needs to be in the dynamic
   inventory script new_do_droplet.in then stick in in there and run 
   > 
@@ -73,8 +82,8 @@ of a TOKEN, this is passed into playbook via an environment variable
   DO_API_TOKEN=XXXXXYYYYYZZZZZZ6e40e31b39df26a9f4a83e89acb63ea18d54bf94252ce2c6
 
 
-> ansible-playbook  new-do-droplet.yml --extra-vars\
-'{"droplets":["dotest12","dotest13"]}'
+    > ansible-playbook  new-do-droplet.yml --extra-vars\
+    '{"droplets":["dotest12","dotest13"]}'
 
 ## Digital Ocean Dynamic inventory script digital_ocean.py
 
