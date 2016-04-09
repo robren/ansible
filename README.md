@@ -55,7 +55,9 @@ The initial setup uses a single playbook new-user.yml
 
 Then run "ansible-playbook new-user.yml" 
 
-# Role Based Droplet Configuration
+## Role Based Droplet Configuration
+This is a variation of the previous playbook using ansible roles. Roles being
+the preferred way to write more reusable ansible scripts.
 For the ansible roles based playbook to create a new-user in an existing
 droplet run the new-user-roles playbook.
     > ansible-playbook new-user-roles.yml 
@@ -85,7 +87,7 @@ of a TOKEN, this is passed into playbook via an environment variable
     > ansible-playbook  new-do-droplet.yml --extra-vars\
     '{"droplets":["dotest12","dotest13"]}'
 
-## Digital Ocean Dynamic inventory script digital_ocean.py
+### Digital Ocean Dynamic inventory script digital_ocean.py
 
 From https://github.com/ansible/ansible/contrib/inventory
 
@@ -118,19 +120,40 @@ understand.
 
 We'll see the use of this next 
 
+#  Putting it all together 
+
+## Shell script wrapping droplet creation
+
+To create a new droplet named do-host1 
+
+> ./new-do-droplet.sh do-host1
+
+
+## Adding a  new user with default environment to the new droplet
+Use the dynamic inventory script in conjunction with our existing
+new-user-roles.yml  playbook  e.g.
+
+> ansible-playbook -i digital_ocean.py new-user-roles.yml --extra-vars 'hosts=dotest9'
+
+## Shell script wrapper to add a new user into an existing droplet
+
+Here's how we can create a new user inside this new VM/droplet. This new user,
+is all set up for passwordless ssh into the host.
+> ./new-do-user.sh do-host1
+
+    test-lt :: ~/ansible » more new-do-user.sh
+    #! /bin/bash -x
+    DROPNAME=$1
+    TOKEN_FILE=~/bin/digital-ocean-env.sh
+    source $TOKEN_FILE
+    ansible-playbook -i digital_ocean.py new-user-roles.yml --extra-vars="hosts=${DROPNAME}" -vv
+
 ## Droplet Deletion
 
 - Note, the variable I added "desired_state" so that we can use the same
   new-do-droplet playbook for both creation and deletion of droplets
 > ansible-playbook -i digital_ocean.py  new-do-droplet.yml --extra-vars \
 '{"droplets":["dotest12","dotest13"], "desired_state":"deleted"}'
-
-## Adding a default environment to the new droplets
-Using the dynamic inventory script in conjunction witht our existing
-new-user-roles playbook 
-
-> ansible-playbook -i digital_ocean.py new-user-roles.yml --extra-vars 'hosts=dotest9'
-
 # Future Tasks
 
  - Ansible and containers?
