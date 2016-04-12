@@ -37,6 +37,7 @@
    - git
    - zsh
    - git-core
+   - xclip
 
 - name: Clone oh-my-zsh repo
   git: repo=https://github.com/robbyrussell/oh-my-zsh.git dest=/home/{{ user_name}}/.oh-my-zsh
@@ -45,6 +46,18 @@
 
 - name: Set zsh as default shell
   user: name={{ user_name }} shell=/bin/zsh
+
+- name: Install the latest tmux repo
+  apt_repository: repo='ppa:pi-rho/dev'
+
+- name: Install tmux  2.0
+  apt: name=tmux=2.0-1~ppa1~t state=present update_cache=yes
+
+- name: Clone tmux plugins repo
+  git: repo=https://github.com/tmux-plugins/tpm dest=/home/{{ user_name }}/.tmux/plugins/tpm
+  become: yes
+  become_user: "{{ user_name }}"
+
     
 - name: Clone my dotfiles repo
   git: repo=https://github.com/robren/dotfiles.git  dest=/home/{{ user_name}}/dotfiles
