@@ -37,6 +37,7 @@
    - git
    - zsh
    - git-core
+   - xdg-utils
    - xclip
 
 - name: Clone oh-my-zsh repo
